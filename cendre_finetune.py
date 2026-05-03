@@ -3,14 +3,16 @@ Cendre QLoRA Fine-tuning with Unsloth
 RTX 5090 | Qwen3-32B (local) | 494 training samples
 """
 import os, torch, json
+torch.cuda.empty_cache()
 from datasets import Dataset
 
-# ===== 镜像源配置（AutoDL 上 hf.co 被墙）=====
-os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+# ===== 显存优化 =====
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+os.environ["UNSLOTH_USE_MODELSCOPE"] = "1"
 
 # ===== 配置 =====
-MODEL_NAME = "Qwen/Qwen3-32B"               # 从 ModelScope/hf-mirror 下载
-MAX_SEQ_LENGTH = 4096
+MODEL_NAME = "unsloth/qwen3-32b-bnb-4bit"  # ModelScope 上的预量化版
+MAX_SEQ_LENGTH = 2048                        # 降一半，大幅减少显存
 LOAD_IN_4BIT = True
 TRAINING_OUTPUT_DIR = "./cendre_finetuned"
 TRAINING_DATA_PATH = "./cendre_training_data.jsonl"
@@ -19,11 +21,11 @@ GRADIENT_ACCUMULATION_STEPS = 16
 LEARNING_RATE = 2e-4
 EPOCHS = 3
 WARMUP_STEPS = 50
-LORA_R = 64
-LORA_ALPHA = 128
-LORA_DROPOUT = 0.05
+LORA_R = 32                                   # rank 降一半，省显存
+LORA_ALPHA = 64                               # alpha = rank
+LORA_DROPOUT = 0
 TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
-SAVE_STEPS = 100
+SAVE_STEPS = 50
 USE_BF16 = True if torch.cuda.get_device_capability()[0] >= 8 else False
 
 print("=" * 60)
@@ -106,10 +108,15 @@ trainer = SFTTrainer(
         report_to="none",
         save_total_limit=2,
         remove_unused_columns=False,
+        optim="adamw_8bit",           # 8-bit Adam 省 2-3GB
+        ddp_find_unused_parameters=False,
     ),
 )
 
 # ===== 开始训练 =====
+gc.collect()
+torch.cuda.empty_cache()
+print(f"训练前显存: {torch.cuda.memory_allocated()/1024**3:.1f}GB")
 print("开始训练...")
 trainer.train()
 print("训练完成")
