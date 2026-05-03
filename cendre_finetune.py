@@ -2,7 +2,7 @@
 Cendre QLoRA Fine-tuning with Unsloth
 RTX 5090 | Qwen3-32B (local) | 494 training samples
 """
-import os, torch, json
+import os, torch, json, gc
 torch.cuda.empty_cache()
 from datasets import Dataset
 
