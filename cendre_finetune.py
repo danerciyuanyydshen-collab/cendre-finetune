@@ -7,7 +7,7 @@ torch.cuda.empty_cache()
 from datasets import Dataset
 
 # ===== 显存优化 =====
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:64,expandable_segments:True"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["UNSLOTH_USE_MODELSCOPE"] = "1"
 
 # ===== 配置 =====
