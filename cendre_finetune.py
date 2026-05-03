@@ -7,12 +7,12 @@ torch.cuda.empty_cache()
 from datasets import Dataset
 
 # ===== 显存优化 =====
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:64,expandable_segments:True"
 os.environ["UNSLOTH_USE_MODELSCOPE"] = "1"
 
 # ===== 配置 =====
 MODEL_NAME = "unsloth/qwen3-32b-bnb-4bit"  # ModelScope 上的预量化版
-MAX_SEQ_LENGTH = 2048                        # 降一半，大幅减少显存
+MAX_SEQ_LENGTH = 1024                        # 聊天数据单轮对话通常很短
 LOAD_IN_4BIT = True
 TRAINING_OUTPUT_DIR = "./cendre_finetuned"
 TRAINING_DATA_PATH = "./cendre_training_data.jsonl"
@@ -21,10 +21,10 @@ GRADIENT_ACCUMULATION_STEPS = 16
 LEARNING_RATE = 2e-4
 EPOCHS = 3
 WARMUP_STEPS = 50
-LORA_R = 32                                   # rank 降一半，省显存
-LORA_ALPHA = 64                               # alpha = rank
+LORA_R = 16                                   # 494条数据，rank 16 足够
+LORA_ALPHA = 16
 LORA_DROPOUT = 0
-TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+TARGET_MODULES = ["q_proj", "k_proj", "v_proj", "o_proj"]  # 只训 attention，跳过 MLP（SwiGLU 激活值最耗显存）
 SAVE_STEPS = 50
 USE_BF16 = True if torch.cuda.get_device_capability()[0] >= 8 else False
 
@@ -115,6 +115,7 @@ trainer = SFTTrainer(
 
 # ===== 开始训练 =====
 gc.collect()
+torch.cuda.empty_cache()
 torch.cuda.empty_cache()
 print(f"训练前显存: {torch.cuda.memory_allocated()/1024**3:.1f}GB")
 print("开始训练...")
