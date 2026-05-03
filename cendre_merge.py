@@ -7,7 +7,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 from unsloth.chat_templates import get_chat_template
 
-BASE_MODEL = "qwen3:32b"  # Ollama 模型
+BASE_MODEL = "Qwen/Qwen3-32B"  # HuggingFace 模型
 ADAPTER_PATH = "./cendre_finetuned/cendre_lora_adapter"
 OUTPUT_NAME = "cendrequen3"
 FINETUNED_DIR = "./cendre_finetuned_model"
