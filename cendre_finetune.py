@@ -5,8 +5,11 @@ RTX 5090 | Qwen3-32B (local) | 494 training samples
 import os, torch, json
 from datasets import Dataset
 
+# ===== 镜像源配置（AutoDL 上 hf.co 被墙）=====
+os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+
 # ===== 配置 =====
-MODEL_NAME = "./qwen3_hf"               # 本地转换好的模型
+MODEL_NAME = "Qwen/Qwen3-32B"               # 从 ModelScope/hf-mirror 下载
 MAX_SEQ_LENGTH = 4096
 LOAD_IN_4BIT = True
 TRAINING_OUTPUT_DIR = "./cendre_finetuned"
@@ -47,7 +50,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     max_seq_length=MAX_SEQ_LENGTH,
     dtype=None,
     load_in_4bit=LOAD_IN_4BIT,
-    local_files_only=True,
+    # 从 ModelScope 镜像站下载（原脚本已在顶部设置 HF_ENDPOINT）
 )
 
 # ===== 添加 LoRA =====
