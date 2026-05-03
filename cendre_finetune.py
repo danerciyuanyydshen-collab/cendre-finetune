@@ -47,6 +47,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     max_seq_length=MAX_SEQ_LENGTH,
     dtype=None,
     load_in_4bit=LOAD_IN_4BIT,
+    local_files_only=True,
 )
 
 # ===== 添加 LoRA =====
